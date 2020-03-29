@@ -4,11 +4,18 @@ import (
 	"encoding/json"
 	"github.com/rithikjain/GistsBackend/api/view"
 	"github.com/rithikjain/GistsBackend/pkg/gists"
+	"io/ioutil"
+	"log"
 	"net/http"
 )
 
-func test(s gists.Service) http.Handler {
+func viewAllFiles(s gists.Service) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			view.Wrap(view.ErrMethodNotAllowed, w)
+			return
+		}
+
 		g, err := s.ViewAllFiles(1)
 		if err != nil {
 			view.Wrap(err, w)
@@ -26,6 +33,21 @@ func test(s gists.Service) http.Handler {
 				file.GistUrl = allGists[i].Url
 				file.IsPublic = allGists[i].IsPublic
 				file.UpdatedAt = allGists[i].UpdatedAt
+
+				// Get content of the file
+				res, err := http.Get(file.RawUrl)
+				if err != nil {
+					view.Wrap(err, w)
+					return
+				}
+				resBody, err := ioutil.ReadAll(res.Body)
+				if err != nil {
+					log.Fatal(err)
+					return
+				}
+				content := string(resBody)
+				file.Content = content
+
 				files = append(files, file)
 			}
 		}
@@ -38,5 +60,5 @@ func test(s gists.Service) http.Handler {
 }
 
 func MakGistsHandler(r *http.ServeMux, svc gists.Service) {
-	r.Handle("/api/test", test(svc))
+	r.Handle("/api/gists", viewAllFiles(svc))
 }

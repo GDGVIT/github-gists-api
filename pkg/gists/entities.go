@@ -16,4 +16,5 @@ type File struct {
 	Filename  string `json:"filename"`
 	Language  string `json:"language"`
 	RawUrl    string `json:"raw_url"`
+	Content   string `json:"content"`
 }
