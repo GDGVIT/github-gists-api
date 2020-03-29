@@ -4,7 +4,7 @@ import "github.com/jinzhu/gorm"
 
 type User struct {
 	gorm.Model
-	Name       string `json:"Name"`
-	Email      string `json:"Email"`
+	Name       string `json:"name"`
+	Email      string `json:"email"`
 	OAuthToken string `json:"-"`
 }
