@@ -5,6 +5,8 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/joho/godotenv"
+	"github.com/rithikjain/GistsBackend/api/handler"
+	"github.com/rithikjain/GistsBackend/pkg/gists"
 	"log"
 	"net/http"
 	"os"
@@ -54,8 +56,13 @@ func main() {
 	fmt.Println("Connected to DB...")
 	db.LogMode(true)
 
+	gistsSvc := gists.NewService(db)
+
 	// Setting up the router
 	r := http.NewServeMux()
+
+	handler.MakGistsHandler(r, gistsSvc)
+
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("Hello There"))
