@@ -9,6 +9,7 @@ import (
 	"net/http"
 )
 
+// Protected Request
 func viewAllFiles(s gists.Service) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
