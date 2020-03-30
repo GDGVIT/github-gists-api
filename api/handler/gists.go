@@ -51,7 +51,7 @@ func createGist(s gists.Service) http.Handler {
 			return
 		}
 
-		gistFile := &gists.CreateGist{}
+		gistFile := &gists.GistFile{}
 		_ = json.NewDecoder(r.Body).Decode(gistFile)
 
 		files, err := s.CreateGist(claims["id"].(float64), gistFile)
@@ -76,6 +76,39 @@ func createGist(s gists.Service) http.Handler {
 				"status":  http.StatusBadRequest,
 			})
 		}
+	})
+}
+
+// Protected Request
+func updateGist(s gists.Service) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			view.Wrap(view.ErrMethodNotAllowed, w)
+			return
+		}
+
+		claims, err := middleware.ValidateAndGetClaims(r.Context(), "user")
+		if err != nil {
+			view.Wrap(err, w)
+			return
+		}
+
+		gistFile := &gists.GistFile{}
+		_ = json.NewDecoder(r.Body).Decode(gistFile)
+
+		files, err := s.UpdateGist(claims["id"].(float64), gistFile)
+		if err != nil {
+			view.Wrap(err, w)
+			return
+		}
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"message": "File Updated",
+			"status":  http.StatusOK,
+			"files":   files,
+		})
 	})
 }
 
@@ -121,5 +154,6 @@ func deleteGist(s gists.Service) http.Handler {
 func MakeGistsHandler(r *http.ServeMux, svc gists.Service) {
 	r.Handle("/api/gists/view", middleware.Validate(viewAllFiles(svc)))
 	r.Handle("/api/gists/create", middleware.Validate(createGist(svc)))
+	r.Handle("/api/gists/update", middleware.Validate(updateGist(svc)))
 	r.Handle("/api/gists/delete", middleware.Validate(deleteGist(svc)))
 }

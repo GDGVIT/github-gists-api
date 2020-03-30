@@ -21,7 +21,8 @@ type File struct {
 	Content     string `json:"content"`
 }
 
-type CreateGist struct {
+type GistFile struct {
+	GistID      string `json:"gist_id"`
 	Description string `json:"description"`
 	IsPublic    bool   `json:"public"`
 	Filename    string `json:"filename"`
@@ -29,13 +30,18 @@ type CreateGist struct {
 }
 
 type CreateFileRequest struct {
-	Description string                `json:"description"`
-	IsPublic    bool                  `json:"public"`
-	Files       map[string]CreateFile `json:"files"`
+	Description string                 `json:"description"`
+	IsPublic    bool                   `json:"public"`
+	Files       map[string]FileContent `json:"files"`
 }
 
-type CreateFile struct {
+type FileContent struct {
 	Content string `json:"content"`
+}
+
+type UpdateFileRequest struct {
+	Description string                 `json:"description"`
+	Files       map[string]FileContent `json:"files"`
 }
 
 type DeleteGist struct {
