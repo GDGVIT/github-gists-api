@@ -14,6 +14,7 @@ func register(s user.Service) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			view.Wrap(view.ErrMethodNotAllowed, w)
+			return
 		}
 
 		user := &user.User{}

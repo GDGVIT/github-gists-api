@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"github.com/rithikjain/GistsBackend/api/middleware"
 	"github.com/rithikjain/GistsBackend/api/view"
 	"github.com/rithikjain/GistsBackend/pkg/gists"
 	"io/ioutil"
@@ -16,7 +17,13 @@ func viewAllFiles(s gists.Service) http.Handler {
 			return
 		}
 
-		g, err := s.ViewAllFiles(1)
+		claims, err := middleware.ValidateAndGetClaims(r.Context(), "user")
+		if err != nil {
+			view.Wrap(err, w)
+			return
+		}
+
+		g, err := s.ViewAllFiles(claims["id"].(float64))
 		if err != nil {
 			view.Wrap(err, w)
 			return
@@ -63,5 +70,5 @@ func viewAllFiles(s gists.Service) http.Handler {
 }
 
 func MakGistsHandler(r *http.ServeMux, svc gists.Service) {
-	r.Handle("/api/gists", viewAllFiles(svc))
+	r.Handle("/api/gists", middleware.Validate(viewAllFiles(svc)))
 }
