@@ -20,3 +20,13 @@ type File struct {
 	Description string `json:"description"`
 	Content     string `json:"content"`
 }
+
+type CreateFileRequest struct {
+	Description string                `json:"description"`
+	IsPublic    bool                  `json:"public"`
+	Files       map[string]CreateFile `json:"files"`
+}
+
+type CreateFile struct {
+	Content string `json:"content"`
+}
