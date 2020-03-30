@@ -6,5 +6,5 @@ type User struct {
 	gorm.Model
 	Name       string `json:"name"`
 	Email      string `json:"email"`
-	OAuthToken string `json:"-"`
+	OAuthToken string `json:"oauth_token"`
 }

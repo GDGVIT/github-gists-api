@@ -7,6 +7,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/rithikjain/GistsBackend/api/handler"
 	"github.com/rithikjain/GistsBackend/pkg/gists"
+	"github.com/rithikjain/GistsBackend/pkg/user"
 	"log"
 	"net/http"
 	"os"
@@ -52,16 +53,22 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error connecting to the database: %s", err.Error())
 	}
+
+	db.AutoMigrate(&user.User{})
+
 	defer db.Close()
 	fmt.Println("Connected to DB...")
 	db.LogMode(true)
 
-	gistsSvc := gists.NewService(db)
-
 	// Setting up the router
 	r := http.NewServeMux()
 
+	gistsSvc := gists.NewService(db)
 	handler.MakGistsHandler(r, gistsSvc)
+
+	userRepo := user.NewRepo(db)
+	userSvc := user.NewService(userRepo)
+	handler.MakeUserHandler(r, userSvc)
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

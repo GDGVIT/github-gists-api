@@ -25,10 +25,13 @@ func (s *service) Register(user *User) (*User, error) {
 	}
 	if exists {
 		//noinspection GoErrorStringFormat
-		u, err := s.repo.FindByEmail(user.Email)
+		tempUser, err := s.repo.FindByEmail(user.Email)
 		if err != nil {
 			return nil, err
 		}
+		tempUser.OAuthToken = user.OAuthToken
+		tempUser.Name = user.Name
+		u, err := s.repo.Register(tempUser)
 		return u, nil
 	}
 	return s.repo.Register(user)

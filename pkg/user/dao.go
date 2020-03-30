@@ -25,7 +25,7 @@ func (r *repo) FindByID(id float64) (*User, error) {
 }
 
 func (r *repo) Register(user *User) (*User, error) {
-	result := r.DB.Create(user)
+	result := r.DB.Save(user)
 	if result.Error != nil {
 		return nil, pkg.ErrDatabase
 	}
