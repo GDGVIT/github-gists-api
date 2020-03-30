@@ -79,7 +79,47 @@ func createGist(s gists.Service) http.Handler {
 	})
 }
 
-func MakGistsHandler(r *http.ServeMux, svc gists.Service) {
+// Protected Request
+func deleteGist(s gists.Service) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			view.Wrap(view.ErrMethodNotAllowed, w)
+			return
+		}
+
+		claims, err := middleware.ValidateAndGetClaims(r.Context(), "user")
+		if err != nil {
+			view.Wrap(err, w)
+			return
+		}
+
+		deleteReq := &gists.DeleteGist{}
+		_ = json.NewDecoder(r.Body).Decode(deleteReq)
+		isDeleted, err := s.DeleteGist(claims["id"].(float64), deleteReq.GistID)
+		if err != nil {
+			view.Wrap(err, w)
+			return
+		}
+
+		if isDeleted == true {
+			w.Header().Add("Content-Type", "application/json; charset=utf-8")
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"status":  http.StatusOK,
+				"message": "Gist Deleted",
+			})
+		} else {
+			w.Header().Add("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"status":  http.StatusBadRequest,
+				"message": "Error Deleting Gist",
+			})
+		}
+	})
+}
+
+func MakeGistsHandler(r *http.ServeMux, svc gists.Service) {
 	r.Handle("/api/gists/view", middleware.Validate(viewAllFiles(svc)))
 	r.Handle("/api/gists/create", middleware.Validate(createGist(svc)))
+	r.Handle("/api/gists/delete", middleware.Validate(deleteGist(svc)))
 }

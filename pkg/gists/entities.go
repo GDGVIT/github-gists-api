@@ -37,3 +37,7 @@ type CreateFileRequest struct {
 type CreateFile struct {
 	Content string `json:"content"`
 }
+
+type DeleteGist struct {
+	GistID string `json:"gist_id"`
+}

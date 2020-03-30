@@ -64,7 +64,7 @@ func main() {
 	r := http.NewServeMux()
 
 	gistsSvc := gists.NewService(db)
-	handler.MakGistsHandler(r, gistsSvc)
+	handler.MakeGistsHandler(r, gistsSvc)
 
 	userRepo := user.NewRepo(db)
 	userSvc := user.NewService(userRepo)

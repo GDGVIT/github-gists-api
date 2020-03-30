@@ -15,6 +15,8 @@ type Service interface {
 	ViewAllFiles(userID float64) (*[]File, error)
 
 	CreateGist(userID float64, gist *CreateGist) (*[]File, error)
+
+	DeleteGist(userID float64, gistID string) (bool, error)
 }
 
 type service struct {
@@ -146,4 +148,37 @@ func (s *service) CreateGist(userID float64, gistFile *CreateGist) (*[]File, err
 	}
 	defer resp.Body.Close()
 	return &files, nil
+}
+
+func (s *service) DeleteGist(userID float64, gistID string) (bool, error) {
+	user := &user.User{}
+	err := s.db.Where("id=?", userID).First(user).Error
+	if err != nil {
+		return false, pkg.ErrDatabase
+	}
+
+	// Deleting file from github
+	token := user.OAuthToken
+	req, err := http.NewRequest("DELETE", "https://api.github.com/gists/"+gistID, nil)
+	if err != nil {
+		return false, err
+	}
+	req.Header.Set("Authorization", "token "+token)
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return false, err
+	}
+
+	if string(body) == "" {
+		return true, nil
+	} else {
+		return false, nil
+	}
 }
