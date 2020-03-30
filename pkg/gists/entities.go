@@ -21,6 +21,13 @@ type File struct {
 	Content     string `json:"content"`
 }
 
+type CreateGist struct {
+	Description string `json:"description"`
+	IsPublic    bool   `json:"public"`
+	Filename    string `json:"filename"`
+	Content     string `json:"content"`
+}
+
 type CreateFileRequest struct {
 	Description string                `json:"description"`
 	IsPublic    bool                  `json:"public"`

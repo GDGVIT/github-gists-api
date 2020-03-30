@@ -1,6 +1,7 @@
 package gists
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/jinzhu/gorm"
 	"github.com/rithikjain/GistsBackend/pkg"
@@ -12,6 +13,8 @@ import (
 
 type Service interface {
 	ViewAllFiles(userID float64) (*[]File, error)
+
+	CreateGist(userID float64, gist *CreateGist) (*[]File, error)
 }
 
 type service struct {
@@ -78,6 +81,69 @@ func (s *service) ViewAllFiles(userID float64) (*[]File, error) {
 			files = append(files, file)
 		}
 	}
+	defer resp.Body.Close()
+	return &files, nil
+}
 
+func (s *service) CreateGist(userID float64, gistFile *CreateGist) (*[]File, error) {
+	// Transforming the file into correct format to send to the gist api
+	fileMap := make(map[string]CreateFile)
+	fileMap[gistFile.Filename] = CreateFile{Content: gistFile.Content}
+	request := CreateFileRequest{
+		Description: gistFile.Description,
+		IsPublic:    gistFile.IsPublic,
+		Files:       fileMap,
+	}
+
+	requestJson, _ := json.Marshal(request)
+
+	user := &user.User{}
+	err := s.db.Where("id=?", userID).First(user).Error
+	if err != nil {
+		return nil, pkg.ErrDatabase
+	}
+
+	// Creating file on github
+	token := user.OAuthToken
+	req, er := http.NewRequest("POST", "https://api.github.com/gists", bytes.NewBuffer(requestJson))
+	if er != nil {
+		return nil, er
+	}
+	req.Header.Set("Authorization", "token "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, er := client.Do(req)
+	if er != nil {
+		return nil, er
+	}
+
+	var gist Gist
+	er = json.NewDecoder(resp.Body).Decode(&gist)
+	if er != nil {
+		return nil, er
+	}
+	var files []File
+	for _, file := range gist.Files {
+		file.GistID = gist.ID
+		file.GistUrl = gist.Url
+		file.IsPublic = gist.IsPublic
+		file.UpdatedAt = gist.UpdatedAt
+		file.Description = gist.Description
+
+		// Get content of the file
+		res, err := http.Get(file.RawUrl)
+		if err != nil {
+			return nil, err
+		}
+		resBody, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+		content := string(resBody)
+		file.Content = content
+
+		files = append(files, file)
+	}
+	defer resp.Body.Close()
 	return &files, nil
 }
