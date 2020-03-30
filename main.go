@@ -35,10 +35,12 @@ func GetPort() string {
 }
 
 func main() {
-	// Loading the .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	if os.Getenv("onServer") != "True" {
+		// Loading the .env file
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
 	}
 
 	// Setting up DB
