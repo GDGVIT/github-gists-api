@@ -1,20 +1,22 @@
 package gists
 
 type Gist struct {
-	Url       string          `json:"url"`
-	ID        string          `json:"id"`
-	IsPublic  bool            `json:"public"`
-	UpdatedAt string          `json:"updated_at"`
-	Files     map[string]File `json:"files"`
+	Url         string          `json:"url"`
+	ID          string          `json:"id"`
+	IsPublic    bool            `json:"public"`
+	UpdatedAt   string          `json:"updated_at"`
+	Description string          `json:"description"`
+	Files       map[string]File `json:"files"`
 }
 
 type File struct {
-	GistID    string `json:"gist_id"`
-	GistUrl   string `json:"gist_url"`
-	IsPublic  bool   `json:"public"`
-	UpdatedAt string `json:"updated_at"`
-	Filename  string `json:"filename"`
-	Language  string `json:"language"`
-	RawUrl    string `json:"raw_url"`
-	Content   string `json:"content"`
+	GistID      string `json:"gist_id"`
+	GistUrl     string `json:"gist_url"`
+	IsPublic    bool   `json:"public"`
+	UpdatedAt   string `json:"updated_at"`
+	Filename    string `json:"filename"`
+	Language    string `json:"language"`
+	RawUrl      string `json:"raw_url"`
+	Description string `json:"description"`
+	Content     string `json:"content"`
 }

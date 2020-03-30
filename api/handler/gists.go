@@ -41,6 +41,7 @@ func viewAllFiles(s gists.Service) http.Handler {
 				file.GistUrl = allGists[i].Url
 				file.IsPublic = allGists[i].IsPublic
 				file.UpdatedAt = allGists[i].UpdatedAt
+				file.Description = allGists[i].Description
 
 				// Get content of the file
 				res, err := http.Get(file.RawUrl)
