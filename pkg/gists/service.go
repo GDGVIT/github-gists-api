@@ -5,12 +5,13 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/rithikjain/GistsBackend/pkg"
 	"github.com/rithikjain/GistsBackend/pkg/user"
+	"io/ioutil"
 	"net/http"
 	"time"
 )
 
 type Service interface {
-	ViewAllFiles(userID float64) (*[]Gist, error)
+	ViewAllFiles(userID float64) (*[]File, error)
 }
 
 type service struct {
@@ -25,7 +26,7 @@ func NewService(db *gorm.DB) Service {
 
 var client = &http.Client{Timeout: 10 * time.Second}
 
-func (s *service) ViewAllFiles(userID float64) (*[]Gist, error) {
+func (s *service) ViewAllFiles(userID float64) (*[]File, error) {
 	user := &user.User{}
 	err := s.db.Where("id=?", userID).First(user).Error
 	if err != nil {
@@ -50,5 +51,33 @@ func (s *service) ViewAllFiles(userID float64) (*[]Gist, error) {
 	if er != nil {
 		return nil, er
 	}
-	return &gists, nil
+
+	var files []File
+
+	// Logic for formatting the files in right format
+	for i := 0; i < len(gists); i++ {
+		for _, file := range gists[i].Files {
+			file.GistID = gists[i].ID
+			file.GistUrl = gists[i].Url
+			file.IsPublic = gists[i].IsPublic
+			file.UpdatedAt = gists[i].UpdatedAt
+			file.Description = gists[i].Description
+
+			// Get content of the file
+			res, err := http.Get(file.RawUrl)
+			if err != nil {
+				return nil, err
+			}
+			resBody, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				return nil, err
+			}
+			content := string(resBody)
+			file.Content = content
+
+			files = append(files, file)
+		}
+	}
+
+	return &files, nil
 }
