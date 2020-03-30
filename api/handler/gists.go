@@ -5,7 +5,6 @@ import (
 	"github.com/rithikjain/GistsBackend/api/view"
 	"github.com/rithikjain/GistsBackend/pkg/gists"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -20,6 +19,7 @@ func viewAllFiles(s gists.Service) http.Handler {
 		g, err := s.ViewAllFiles(1)
 		if err != nil {
 			view.Wrap(err, w)
+			return
 		}
 
 		var files []gists.File
@@ -43,7 +43,7 @@ func viewAllFiles(s gists.Service) http.Handler {
 				}
 				resBody, err := ioutil.ReadAll(res.Body)
 				if err != nil {
-					log.Fatal(err)
+					view.Wrap(err, w)
 					return
 				}
 				content := string(resBody)
@@ -55,7 +55,9 @@ func viewAllFiles(s gists.Service) http.Handler {
 
 		w.Header().Add("Content-Type", "application/json; charset=utf-8")
 		_ = json.NewEncoder(w).Encode(map[string]interface{}{
-			"files": files,
+			"message": "Files Retrieved",
+			"status":  http.StatusOK,
+			"files":   files,
 		})
 	})
 }
