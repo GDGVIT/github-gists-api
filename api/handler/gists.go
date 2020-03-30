@@ -61,12 +61,21 @@ func createGist(s gists.Service) http.Handler {
 		}
 
 		w.Header().Add("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusCreated)
-		_ = json.NewEncoder(w).Encode(map[string]interface{}{
-			"message": "File Created",
-			"status":  http.StatusCreated,
-			"files":   files,
-		})
+
+		if len(*files) != 0 {
+			w.WriteHeader(http.StatusCreated)
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"message": "File Created",
+				"status":  http.StatusCreated,
+				"files":   files,
+			})
+		} else {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"message": "File Creation Failed",
+				"status":  http.StatusBadRequest,
+			})
+		}
 	})
 }
 
