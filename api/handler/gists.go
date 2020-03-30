@@ -38,5 +38,5 @@ func viewAllFiles(s gists.Service) http.Handler {
 }
 
 func MakGistsHandler(r *http.ServeMux, svc gists.Service) {
-	r.Handle("/api/gists", middleware.Validate(viewAllFiles(svc)))
+	r.Handle("/api/gists/view", middleware.Validate(viewAllFiles(svc)))
 }
