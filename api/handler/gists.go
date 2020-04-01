@@ -128,26 +128,19 @@ func deleteGist(s gists.Service) http.Handler {
 
 		deleteReq := &gists.DeleteGist{}
 		_ = json.NewDecoder(r.Body).Decode(deleteReq)
-		isDeleted, err := s.DeleteGist(claims["id"].(float64), deleteReq.GistID)
+		files, err := s.DeleteGist(claims["id"].(float64), deleteReq)
 		if err != nil {
 			view.Wrap(err, w)
 			return
 		}
 
-		if isDeleted == true {
-			w.Header().Add("Content-Type", "application/json; charset=utf-8")
-			_ = json.NewEncoder(w).Encode(map[string]interface{}{
-				"status":  http.StatusOK,
-				"message": "Gist Deleted",
-			})
-		} else {
-			w.Header().Add("Content-Type", "application/json; charset=utf-8")
-			w.WriteHeader(http.StatusBadRequest)
-			_ = json.NewEncoder(w).Encode(map[string]interface{}{
-				"status":  http.StatusBadRequest,
-				"message": "Error Deleting Gist",
-			})
-		}
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"message": "File Updated",
+			"status":  http.StatusOK,
+			"files":   files,
+		})
 	})
 }
 

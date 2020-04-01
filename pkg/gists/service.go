@@ -18,7 +18,7 @@ type Service interface {
 
 	UpdateGist(userID float64, gistFile *GistFile) (*[]File, error)
 
-	DeleteGist(userID float64, gistID string) (bool, error)
+	DeleteGist(userID float64, deleteGist *DeleteGist) (*[]File, error)
 }
 
 type service struct {
@@ -214,35 +214,67 @@ func (s *service) UpdateGist(userID float64, gistFile *GistFile) (*[]File, error
 	return &files, nil
 }
 
-func (s *service) DeleteGist(userID float64, gistID string) (bool, error) {
+func (s *service) DeleteGist(userID float64, deleteGist *DeleteGist) (*[]File, error) {
+	// Transforming the file into correct format to send to the gist api
+	file := make(map[string]interface{})
+	file[deleteGist.Filename] = nil
+
+	request := make(map[string]interface{})
+	request["files"] = file
+
+	requestJson, _ := json.Marshal(request)
+
 	user := &user.User{}
 	err := s.db.Where("id=?", userID).First(user).Error
 	if err != nil {
-		return false, pkg.ErrDatabase
+		return nil, pkg.ErrDatabase
 	}
 
 	// Deleting file from github
 	token := user.OAuthToken
-	req, err := http.NewRequest("DELETE", "https://api.github.com/gists/"+gistID, nil)
-	if err != nil {
-		return false, err
+	req, er := http.NewRequest("PATCH", "https://api.github.com/gists/"+deleteGist.GistID, bytes.NewBuffer(requestJson))
+	if er != nil {
+		return nil, er
 	}
 	req.Header.Set("Authorization", "token "+token)
-	resp, err := client.Do(req)
-	if err != nil {
-		return false, err
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, er := client.Do(req)
+	if er != nil {
+		return nil, er
 	}
 
+	if resp.Header.Get("Status") == "404 Not Found" {
+		return nil, pkg.ErrNotFound
+	}
+
+	var gist Gist
+	er = json.NewDecoder(resp.Body).Decode(&gist)
+	if er != nil {
+		return nil, er
+	}
+	var files []File
+	for _, file := range gist.Files {
+		file.GistID = gist.ID
+		file.GistUrl = gist.Url
+		file.IsPublic = gist.IsPublic
+		file.UpdatedAt = gist.UpdatedAt
+		file.Description = gist.Description
+
+		// Get content of the file
+		res, err := http.Get(file.RawUrl)
+		if err != nil {
+			return nil, err
+		}
+		resBody, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+		content := string(resBody)
+		file.Content = content
+
+		files = append(files, file)
+	}
 	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return false, err
-	}
-
-	if string(body) == "" {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	return &files, nil
 }

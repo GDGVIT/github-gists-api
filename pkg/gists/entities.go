@@ -45,5 +45,6 @@ type UpdateFileRequest struct {
 }
 
 type DeleteGist struct {
-	GistID string `json:"gist_id"`
+	GistID   string `json:"gist_id"`
+	Filename string `json:"filename"`
 }
