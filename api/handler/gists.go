@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/rithikjain/GistsBackend/api/middleware"
 	"github.com/rithikjain/GistsBackend/api/view"
+	"github.com/rithikjain/GistsBackend/pkg"
 	"github.com/rithikjain/GistsBackend/pkg/gists"
 	"net/http"
 )
@@ -25,6 +26,11 @@ func viewAllFiles(s gists.Service) http.Handler {
 		files, err := s.ViewAllFiles(claims["id"].(float64))
 		if err != nil {
 			view.Wrap(err, w)
+			return
+		}
+
+		if len(*files) == 0 {
+			view.Wrap(pkg.ErrNotFound, w)
 			return
 		}
 
